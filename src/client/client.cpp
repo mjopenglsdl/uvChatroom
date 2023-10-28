@@ -3,10 +3,14 @@
 #include <string.h>
 #include <assert.h>
 #include <iostream>
-#include <base.h>
+
+#include "base.h"
 
 uv_loop_t *loop;
 User *g_user;
+
+using std::cout;
+using std::endl;
 
 typedef struct connect_info_s {
 	uv_tcp_t *p_tcp;
@@ -30,7 +34,7 @@ void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
         return ;
     }
     buf->base[nread] = 0;
-	std::cout << "server say : " << buf->base << std::endl;
+	cout << "[info] server say : " << buf->base << endl;
 	if (buf->base) {
 		free(buf->base);
 	}
@@ -41,9 +45,9 @@ void send_name_cb(uv_write_t *req, int status)
 	connect_info_t *info = reinterpret_cast<connect_info_t*>(req->data);
 	free(req);
 	if (status < 0) {
-		std::cout << "send name failed" << std::endl;
+		cout << "[info] Send name failed" << endl;
 	} else {
-		std::cout << "send name succeed" << std::endl;
+		// cout << "[info] Send name succeed" << endl;
 		assert(info && "connect_info is null");
 		read_message(info);
 	}
@@ -59,7 +63,7 @@ void send_message_cb(uv_write_t *write, int status)
 	if (status < 0) {
 		std::cout << "send message fail" << std::endl;
 	} else {
-		std::cout << "send message succeed\n";
+		// std::cout << "send message succeed\n";
 	}
 	free(write);
 }
@@ -104,7 +108,7 @@ void read_message_thread(void *arg)
     uv_async_t *async = new uv_async_t;
     uv_async_init(loop, async, on_write_msg);
     while (true) {
-        std::cout << "enter message:\n";
+        cout << "[prompt] Enter message:\n";
         char *buffer = get_message();
 
         send_info_t *sendInfo = new send_info_t;
@@ -115,6 +119,7 @@ void read_message_thread(void *arg)
         uv_async_send(async);
     }
 }
+
 #pragma clang diagnostic pop
 void read_message(connect_info_t *info)
 {
@@ -142,7 +147,7 @@ void on_connect(uv_connect_t *req, int status)
 		uv_write_t* write = (uv_write_t*)malloc(sizeof(uv_write_t));
 		write->data = info;
 
-        std::cout << "please enter your name:\n";
+        std::cout << "[prompt] Please enter your name:\n    ";
 		char *buffer = get_message();
 		g_user = new User(buffer);
 		auto jsonUser = g_user->json();
@@ -157,11 +162,12 @@ void on_connect(uv_connect_t *req, int status)
 		
 }
 
-
 void print_usage(const char *fileName)
 {
 	std::cout << "usage :\n" << fileName << " ip port\n";
 }
+
+
 int main(int argc, char **argv)
 {
 	if (argc != 3) {

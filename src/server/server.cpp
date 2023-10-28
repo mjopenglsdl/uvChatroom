@@ -8,6 +8,9 @@
 uv_loop_t *loop;
 std::vector<uv_tcp_t*> connectionList;
 
+using std::cout;
+using std::endl;
+
 static void write_cb(uv_write_t *write, int status)
 {
     char *buffer = reinterpret_cast<char *>(write->data);
@@ -50,7 +53,7 @@ static void echo_read(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
         return ;
     }
     buf->base[nread] = 0;
-    std::cout << "receive client message :\n" << buf->base;
+    cout << "[receive] client message :\n    " << buf->base<<endl;
 	for (auto c : connectionList)
 	{
 		if (c == connection) continue;
