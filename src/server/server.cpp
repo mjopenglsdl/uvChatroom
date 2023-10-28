@@ -91,27 +91,35 @@ static void on_new_connection(uv_stream_t *server, int status)
 
 static void print_usage(const char *fileName)
 {
-	std::cout << "usage :\n" << fileName << " PORT\n";
+	cout << "usage :\n" << fileName << "  [ipv6 | ipv4] [port]"<<endl;
 }
 
 int main(int argc, char **argv)
 {
-	if (argc != 2) {
+	if (argc != 3) {
 		print_usage(argv[0]);	
 		return 1;
 	}
 
-	int port = atoi(argv[1]);	
+	bool is_ipv4 = std::string(argv[1]) == "ipv4";
+	int port = atoi(argv[2]);	
 
 	loop = uv_default_loop();
 	
 	uv_tcp_t server;
 	uv_tcp_init(loop, &server);
 	
-	struct sockaddr_in addr;
-	uv_ip4_addr("0.0.0.0", port, &addr);
+	if (is_ipv4) {
+		struct sockaddr_in addr;
+		uv_ip4_addr("0.0.0.0", port, &addr);
+		uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
 
-	uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
+	} else {
+		struct sockaddr_in6 addr;
+		uv_ip6_addr("::0", port, &addr);
+		uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
+	}
+
 	int r = uv_listen((uv_stream_t*) &server, DEFAULT_BACKLOG, on_new_connection);
 	if (r) {
 		std::cout << "Listen error " << uv_strerror(r) << std::endl;
